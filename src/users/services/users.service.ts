@@ -39,6 +39,12 @@ export class UsersService extends PrismaClient implements OnModuleInit {
     });
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.user.findUnique({
+      where: { email },
+    });
+  }
+
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     return this.user.update({
       where: { id },

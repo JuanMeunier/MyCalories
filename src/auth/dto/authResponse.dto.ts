@@ -1,11 +1,16 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { User } from "src/users/entities/user.entity";
-
+import { User } from "@prisma/client";
 
 export class AuthResponseDto {
-    @ApiProperty({ type: User })
-    user: User;
+    @ApiProperty({
+        example: {
+            id: 1,
+            name: "Juan Pérez",
+            email: "juan@example.com"
+        }
+    })
+    user: Omit<User, 'password'>; // ← Usar tipo de Prisma sin password
 
-    @ApiProperty({ example: 'jwt.token.here' })
+    @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
     token: string;
 }

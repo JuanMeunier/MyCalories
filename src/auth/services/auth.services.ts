@@ -1,12 +1,12 @@
+// src/auth/services/auth.services.ts
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { LoginDto } from "../dto/login.dto";
 import { AuthResponseDto } from "../dto/authResponse.dto";
 import { RegisterUserDto } from "../dto/register.dto";
 import { JwtService } from "@nestjs/jwt";
 import { UsersService } from "src/users/services/users.service";
+import { User } from '@prisma/client'; // ← Usar tipo de Prisma
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/users/entities/user.entity';
-
 
 @Injectable()
 export class AuthService {
@@ -15,7 +15,7 @@ export class AuthService {
         private readonly jwtService: JwtService,
     ) { }
 
-    async register(registerUserDto: RegisterUserDto): Promise<User> {
+    async register(registerUserDto: RegisterUserDto): Promise<Omit<User, 'password'>> {
         const { name, email, password } = registerUserDto;
         const existingUser = await this.usersService.findByEmail(email);
 
@@ -28,10 +28,11 @@ export class AuthService {
             name,
             email,
             password: hashedPassword,
-            role,
         });
 
-        return newUser;
+        // Eliminar la contraseña del objeto de usuario antes de devolverlo
+        const { password: _, ...userWithoutPassword } = newUser;
+        return userWithoutPassword;
     }
 
     async login(loginDto: LoginDto): Promise<AuthResponseDto> {
@@ -47,11 +48,12 @@ export class AuthService {
             throw new UnauthorizedException('Credenciales inválidas');
         }
 
-        const token = this.jwtService.sign({ userId: user.id, role: user.role });
+        const payload = { userId: user.id, email: user.email };
+        const token = this.jwtService.sign(payload);
 
         // Eliminar la contraseña del objeto de usuario antes de devolverlo
         const { password: _, ...userWithoutPassword } = user;
 
-        return { user: userWithoutPassword as User, token };
+        return { user: userWithoutPassword, token };
     }
 }
