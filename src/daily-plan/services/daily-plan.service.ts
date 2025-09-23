@@ -40,6 +40,22 @@ export class DailyPlanService extends PrismaClient implements OnModuleInit {
     return plan;
   }
 
+  async findByDate(date: Date, userId: number) {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    const plan = await this.dailyPlan.findFirst({
+      where: {
+        date: { gte: startOfDay, lte: endOfDay },
+        userId,
+      },
+      include: { foods: true },
+    });
+    if (!plan) throw new NotFoundException(`DailyPlan for date ${date.toDateString()} no encontrado`);
+    return plan;
+  }
+
 
   async update(id: number, updateDailyPlanDto: UpdateDailyPlanDto) {
     return this.dailyPlan.update({

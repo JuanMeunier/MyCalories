@@ -27,10 +27,22 @@ export class DailyPlanController {
     return await this.dailyPlanService.findOne(+id);
   }
 
+  @Get('date/:date')
+  async findByDate(@Param('date') date: string, @Body() userId: number) {
+    this.logger.log(`Getting daily plan for date ${date}`);
+    return await this.dailyPlanService.findByDate(new Date(date), userId);
+  }
+
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateDailyPlanDto: UpdateDailyPlanDto) {
     this.logger.log(`Updating daily plan with id ${id}`);
     return await this.dailyPlanService.update(+id, updateDailyPlanDto);
+  }
+
+  @Patch(':id/add-food')
+  async addFoodToDailyPlan(@Param('id') id: string, @Body() dto: { foodId: number; quantity: number }) {
+    this.logger.log(`Adding food to daily plan with id ${id}`);
+    return await this.dailyPlanService.addFoodToDailyPlan(+id, dto);
   }
 
   @Delete(':id')
