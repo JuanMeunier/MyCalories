@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { StreakService } from './streak.service';
-import { StreakController } from './streak.controller';
+import { StreakService } from './services/streak.service';
+import { StreakController } from './controllers/streak.controller';
 
 @Module({
   controllers: [StreakController],
   providers: [StreakService],
 })
-export class StreakModule {}
+export class StreakModule { }

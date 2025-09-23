@@ -1,26 +1,54 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Injectable, OnModuleInit, ConflictException, Logger } from '@nestjs/common';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
+import { PrismaClient, User } from '@prisma/client';
 
 @Injectable()
-export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+export class UsersService extends PrismaClient implements OnModuleInit {
+  private readonly logger = new Logger(UsersService.name);
+
+  async onModuleInit() {
+    await this.$connect();
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    // Verifica si ya existe un usuario con el mismo email
+    const existingUser = await this.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+    if (existingUser) {
+      throw new ConflictException('El usuario ya existe con ese email');
+    }
+    try {
+      return await this.user.create({
+        data: createUserDto,
+      });
+    } catch (error) {
+      this.logger.error('Error creando usuario', error);
+      throw error;
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findAll(): Promise<User[]> {
+    return this.user.findMany();
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findOne(id: number): Promise<User | null> {
+    return this.user.findUnique({
+      where: { id },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    return this.user.update({
+      where: { id },
+      data: updateUserDto,
+    });
+  }
+
+  async remove(id: number): Promise<User> {
+    return this.user.delete({
+      where: { id },
+    });
   }
 }

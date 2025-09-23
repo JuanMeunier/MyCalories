@@ -1,34 +1,41 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { DailyPlanService } from './daily-plan.service';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Logger } from '@nestjs/common';
+import { DailyPlanService } from '../services/daily-plan.service';
 import { CreateDailyPlanDto } from '../dto/create-daily-plan.dto';
 import { UpdateDailyPlanDto } from '../dto/update-daily-plan.dto';
 
 @Controller('daily-plan')
 export class DailyPlanController {
+  private readonly logger = new Logger(DailyPlanController.name);
+
   constructor(private readonly dailyPlanService: DailyPlanService) { }
 
   @Post()
-  create(@Body() createDailyPlanDto: CreateDailyPlanDto) {
-    return this.dailyPlanService.create(createDailyPlanDto);
+  async create(@Body() createDailyPlanDto: CreateDailyPlanDto, userId: number) {
+    this.logger.log('Creating daily plan');
+    return await this.dailyPlanService.create(createDailyPlanDto, userId);
   }
 
   @Get()
-  findAll() {
-    return this.dailyPlanService.findAll();
+  async findAll(@Body() userId: number) {
+    this.logger.log('Getting all daily plans');
+    return await this.dailyPlanService.findAll(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.dailyPlanService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    this.logger.log(`Getting daily plan with id ${id}`);
+    return await this.dailyPlanService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDailyPlanDto: UpdateDailyPlanDto) {
-    return this.dailyPlanService.update(+id, updateDailyPlanDto);
+  async update(@Param('id') id: string, @Body() updateDailyPlanDto: UpdateDailyPlanDto) {
+    this.logger.log(`Updating daily plan with id ${id}`);
+    return await this.dailyPlanService.update(+id, updateDailyPlanDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.dailyPlanService.remove(+id);
+  async remove(@Param('id') id: string) {
+    this.logger.log(`Deleting daily plan with id ${id}`);
+    return await this.dailyPlanService.remove(+id);
   }
 }
