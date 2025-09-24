@@ -7,7 +7,9 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards
+  UseGuards,
+  Req,
+  NotFoundException
 } from '@nestjs/common';
 import { FoodsService } from '../services/foods.service';
 import { CreateFoodDto } from '../dto/create-food.dto';
@@ -94,5 +96,36 @@ export class FoodsController {
   @ApiUnauthorizedResponse({ description: 'Token JWT requerido' })
   remove(@Param('id') id: string) {
     return this.foodsService.remove(+id);
+  }
+
+  // -----------------------
+  // MARKET
+  // -----------------------
+
+  @Get('market')
+  @ApiOperation({
+    summary: 'Obtener todos los alimentos del Market',
+    description: 'Devuelve todas las comidas públicas disponibles en el Market'
+  })
+  findAllMarket() {
+    return this.foodsService.findAllMarket();
+  }
+
+  @Get('market/search/:name')
+  @ApiOperation({
+    summary: 'Buscar alimentos en el Market por nombre',
+    description: 'Busca comidas públicas en el Market que contengan el nombre indicado'
+  })
+  findByNameMarket(@Param('name') name: string) {
+    return this.foodsService.findByNameMarket(name);
+  }
+
+  @Post('market/clone/:name')
+  @ApiOperation({
+    summary: 'Clonar alimento del Market a tu inventario',
+    description: 'Clona un alimento público del Market y lo añade a tu inventario privado'
+  })
+  addToMyFoods(@Param('name') name: string, @Param('userId') userId: number) {
+    return this.foodsService.addToMyFoods(name, userId);
   }
 }

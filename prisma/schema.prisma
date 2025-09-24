@@ -20,6 +20,7 @@ model User {
   password   String
   dailyPlans DailyPlan[]
   streaks    Streak[]
+  Food       Food[]
 }
 
 model Food {
@@ -31,6 +32,9 @@ model Food {
   fats        Int
   dailyPlan   DailyPlan? @relation(fields: [dailyPlanId], references: [id])
   dailyPlanId Int?
+  createdBy   User       @relation(fields: [userId], references: [id])
+  userId      Int
+  isPublic    Boolean    @default(false)
 }
 
 model DailyPlan {
