@@ -116,7 +116,7 @@ export class FoodsService extends PrismaClient implements OnModuleInit {
         proteins: sourceFood.proteins,
         carbs: sourceFood.carbs,
         fats: sourceFood.fats,
-        createdBy: userId,
+        userId: userId,
         isPublic: false,
       },
     });

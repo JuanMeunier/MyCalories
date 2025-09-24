@@ -19,4 +19,14 @@ export class CreateFoodDto {
     @IsInt()
     @Min(0)
     fats: number;
+
+    @IsNotEmpty()
+    isPublic: boolean;
+
+    @IsInt()
+    @Min(1)
+
+    userId: number;
+
+
 }
