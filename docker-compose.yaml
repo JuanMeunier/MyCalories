@@ -1,16 +1,35 @@
-version: '3'
-
+version: '3.8'
 
 services:
-  orders-db:
-    container_name: calories_database
-    image: postgres:16.2
+  # Base de datos
+  db:
+    image: postgres:16
+    container_name: calories_db
     restart: always
-    volumes:
-      - ./postgres:/var/lib/postgresql/data
     ports:
-      - 5434:5432
+      - "5434:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_DB=caloriesdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: caloriesdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Aplicación
+  app:
+    build: .
+    container_name: calories_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:123456@db:5432/caloriesdb?schema=public"
+      JWT_SECRET: "mi-super-secreto-jwt-123"
+      JWT_EXPIRES_IN: "7d"
+      PORT: 3000
+    depends_on:
+      - db
+    command: sh -c "sleep 10 && npx prisma migrate deploy && npm run start:dev"
+
+volumes:
+  postgres_data:
