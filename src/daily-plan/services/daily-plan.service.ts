@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit, NotFoundException } from '@nestjs/common';
+// src/daily-plan/services/daily-plan.service.ts
+import { Injectable, Logger, OnModuleInit, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateDailyPlanDto, UpdateDailyPlanDto, AddFoodToDailyPlanDto } from '../dto';
 import { PrismaClient } from '@prisma/client';
 
@@ -10,7 +11,6 @@ export class DailyPlanService extends PrismaClient implements OnModuleInit {
     await this.$connect();
     this.logger.log('Prisma connected');
   }
-
 
   async create(createDailyPlanDto: CreateDailyPlanDto, userId: number) {
     return this.dailyPlan.create({
@@ -30,13 +30,21 @@ export class DailyPlanService extends PrismaClient implements OnModuleInit {
     });
   }
 
-
-  async findOne(id: number) {
+  async findOne(id: number, userId: number) {
     const plan = await this.dailyPlan.findUnique({
       where: { id },
       include: { foods: true },
     });
-    if (!plan) throw new NotFoundException(`DailyPlan #${id} no encontrado`);
+
+    if (!plan) {
+      throw new NotFoundException(`DailyPlan #${id} no encontrado`);
+    }
+
+    // Verificar que el plan pertenezca al usuario
+    if (plan.userId !== userId) {
+      throw new ForbiddenException('No tienes acceso a este plan diario');
+    }
+
     return plan;
   }
 
@@ -45,6 +53,7 @@ export class DailyPlanService extends PrismaClient implements OnModuleInit {
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
+
     const plan = await this.dailyPlan.findFirst({
       where: {
         date: { gte: startOfDay, lte: endOfDay },
@@ -52,33 +61,39 @@ export class DailyPlanService extends PrismaClient implements OnModuleInit {
       },
       include: { foods: true },
     });
-    if (!plan) throw new NotFoundException(`DailyPlan for date ${date.toDateString()} no encontrado`);
+
+    if (!plan) {
+      throw new NotFoundException(`DailyPlan para la fecha ${date.toDateString()} no encontrado`);
+    }
+
     return plan;
   }
 
+  async update(id: number, updateDailyPlanDto: UpdateDailyPlanDto, userId: number) {
+    // Verificar que el plan existe y pertenece al usuario
+    await this.findOne(id, userId);
 
-  async update(id: number, updateDailyPlanDto: UpdateDailyPlanDto) {
     return this.dailyPlan.update({
       where: { id },
       data: { ...updateDailyPlanDto },
     });
   }
 
+  async remove(id: number, userId: number) {
+    // Verificar que el plan existe y pertenece al usuario
+    await this.findOne(id, userId);
 
-  async remove(id: number) {
     return this.dailyPlan.delete({ where: { id } });
   }
 
-
-  async addFoodToDailyPlan(dailyPlanId: number, dto: AddFoodToDailyPlanDto) {
-    const dailyPlan = await this.dailyPlan.findUnique({
-      where: { id: dailyPlanId },
-      include: { foods: true },
-    });
-    if (!dailyPlan) throw new NotFoundException('DailyPlan no encontrado');
+  async addFoodToDailyPlan(dailyPlanId: number, dto: AddFoodToDailyPlanDto, userId: number) {
+    // Verificar que el plan existe y pertenece al usuario
+    const dailyPlan = await this.findOne(dailyPlanId, userId);
 
     const food = await this.food.findUnique({ where: { id: dto.foodId } });
-    if (!food) throw new NotFoundException('Food no encontrado');
+    if (!food) {
+      throw new NotFoundException('Alimento no encontrado');
+    }
 
     return this.dailyPlan.update({
       where: { id: dailyPlanId },

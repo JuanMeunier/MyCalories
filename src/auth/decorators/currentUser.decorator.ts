@@ -1,13 +1,21 @@
+
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { User } from '@prisma/client';
+
+// Interface para el payload del JWT
+export interface JwtPayload {
+    userId: number;
+    email: string;
+    iat?: number;
+    exp?: number;
+}
 
 export const CurrentUser = createParamDecorator(
-    (data: keyof User | undefined, context: ExecutionContext): User | any => {
+    (data: keyof JwtPayload | undefined, context: ExecutionContext): JwtPayload | any => {
         // Paso 1: Obtener el request del contexto HTTP
         const request = context.switchToHttp().getRequest();
 
         // Paso 2: Extraer el usuario del request (lo setea tu JwtAuthGuard)
-        const user: User = request.user;
+        const user: JwtPayload = request.user;
 
         // Paso 3: Validar que el usuario exista
         if (!user) {
